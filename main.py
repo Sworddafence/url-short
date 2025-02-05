@@ -36,7 +36,7 @@ def query_for_hash(connection, hash, url):
 
     try:
         cursor.execute(query)
-        results = cursor.fetchall()  # Fetch all rows
+        results = cursor.fetchall()  
         print(results)
         if(results == []):
             query = f"INSERT INTO hash_urls (hash, url) VALUES ('{hash}', '{url}');"
@@ -50,14 +50,12 @@ def query_for_hash(connection, hash, url):
         return "failed"
     return results
 
-# Example usage
-
 def query_for_url(connection, hash):
     cursor = connection.cursor()
     query = f"SELECT url, hash FROM hash_urls WHERE hash = '{hash}';"
     try:
         cursor.execute(query)
-        results = cursor.fetchall()  # Fetch all rows
+        results = cursor.fetchall()  
         print(results)
         print(type(results))
         print(results[0][0])
@@ -65,13 +63,7 @@ def query_for_url(connection, hash):
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return "failed"
- 
-
-app = Flask(__name__)
-
-if(len(sys.argv) < 2):
-    print("You have no command line arguments")
-
+    
 def remove_http(url):
     if url.startswith('http://'):
         return url[len('http://'):]
@@ -80,30 +72,27 @@ def remove_http(url):
     else:
         return url  
 
+app = Flask(__name__)
 
-# Define a route for the root URL ("/")
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['POST'])
 def urlshortner():
-    if request.method == 'POST':
-        user_input = request.form['user_input']
-        user_input = remove_http(user_input)
-        user_input = user_input.lower()
-        url = user_input.encode('utf-8')
-        hash = zlib.crc32(url)
-        hash = f"{hash & 0xFFFFFFFF:08x}"
-        hash = hash[4:]
-        g = query_for_hash(connection, hash, user_input)
-
-
-        return f'{cururl}/{hash}'
+    user_input = request.form['user_input']
+    user_input = remove_http(user_input)
+    user_input = user_input.lower()
+    url = user_input.encode('utf-8')
+    hash = zlib.crc32(url)
+    hash = f"{hash & 0xFFFFFFFF:08x}"
+    hash = hash[4:]
+    g = query_for_hash(connection, hash, user_input)
+    return f'{cururl}/{hash}'
+    
+@app.route('/', methods=['GET'])
+def urlmainpage():
     return render_template('index.html')
 
 @app.route('/<path:randomstuff>')
 def catch_all(randomstuff):
-    # Redirect to a specific page, e.g., 'home'
     g = query_for_url(connection, randomstuff)
-    #print(g[0])
-    ##return "hi"
     url = f'https://{g}'
     return redirect(url)
 
