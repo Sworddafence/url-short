@@ -2,12 +2,13 @@ from flask import Flask, render_template, request, redirect
 import zlib
 import sys
 import mysql.connector
+import os
 
 # Config for database
 config = {
-    'user': 'root',      
-    'password': '',  
-    'host': 'localhost',          
+    'user': 'bob',      
+    'password': '1204',  
+    'host': 'host.docker.internal',          
     'database': 'url_short',     
     'raise_on_warnings': True
 }
@@ -15,8 +16,8 @@ def create_table(connection):
     cursor = connection.cursor()
     create_table_query = """
     CREATE TABLE IF NOT EXISTS hash_urls (
-        hash VARCHAR(64),
-        url VARCHAR(2048),
+        hash VARCHAR(10),
+        url VARCHAR(100),
         PRIMARY KEY (hash, url)
     );
     """
@@ -70,7 +71,6 @@ app = Flask(__name__)
 
 if(len(sys.argv) < 2):
     print("You have no command line arguments")
-cururl = sys.argv[1]
 
 def remove_http(url):
     if url.startswith('http://'):
@@ -117,8 +117,9 @@ if __name__ == '__main__':
     except mysql.connector.Error as err:
         print(f"Error: {err}")
 
-    #Command Line arugments
-    if(len(sys.argv) < 2):
-        print("You have no command line arguments")
-
-    app.run(debug=True)
+    ##Command Line arugments
+    #if(len(sys.argv) < 2):
+    #    print("You have no command line arguments")
+    port = int(os.getenv('FLASK_PORT', 5001))
+    cururl = "localhost:" + str(port)
+    app.run(debug=True, port=5001, host="0.0.0.0")
